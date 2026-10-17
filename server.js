@@ -1,9 +1,11 @@
 const express = require('express');
 const QRCode = require('qrcode');
 const pino = require('pino');
+const cors = require('cors'); // نیا پیکیج CORS کے لیے
 const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 
 const app = express();
+app.use(cors()); // تمام ڈومینز سے ریکوئस्ट الاؤ کرنے کے لیے
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -79,13 +81,6 @@ app.get('/', (req, res) => {
 
 // 2. Status Route for Testing Connection
 app.get('/status', (req, res) => {
-  const authHeader = req.headers['authorization'] || req.headers['x-api-key'];
-  const token = authHeader && authHeader.replace('Bearer ', '');
-
-  if (token !== GATEWAY_SECRET) {
-    return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Secret Token' });
-  }
-
   res.json({
     success: true,
     connected: isConnected,
