@@ -1,11 +1,11 @@
 const express = require('express');
 const QRCode = require('qrcode');
 const pino = require('pino');
-const cors = require('cors'); // نیا پیکیج CORS کے لیے
+const cors = require('cors');
 const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 
 const app = express();
-app.use(cors()); // تمام ڈومینز سے ریکوئस्ट الاؤ کرنے کے لیے
+app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -52,43 +52,20 @@ async function connectToWhatsApp() {
   });
 }
 
-// 1. Web Route: QR Code & Status UI
 app.get('/', (req, res) => {
   if (isConnected) {
-    return res.send(`
-      <div style="text-align:center;margin-top:100px;font-family:sans-serif;">
-        <h1 style="color:#10b981;">⚡ THG WhatsApp Gateway Connected!</h1>
-        <p>Your WhatsApp session is active and ready to dispatch OTP messages.</p>
-      </div>
-    `);
+    return res.send('<div style="text-align:center;margin-top:100px;font-family:sans-serif;"><h1 style="color:#10b981;">⚡ THG WhatsApp Gateway Connected!</h1><p>Your WhatsApp session is active and ready to dispatch OTP messages.</p></div>');
   }
   if (qrCodeData) {
-    return res.send(`
-      <div style="text-align:center;margin-top:50px;font-family:sans-serif;">
-        <h2>Scan QR Code with WhatsApp</h2>
-        <p>Open WhatsApp on your phone -> Linked Devices -> Link a Device</p>
-        <img src="${qrCodeData}" alt="WhatsApp QR Code" style="margin-top:20px; border:4px solid #10b981; border-radius:12px;"/>
-      </div>
-    `);
+    return res.send(`<div style="text-align:center;margin-top:50px;font-family:sans-serif;"><h2>Scan QR Code with WhatsApp</h2><p>Open WhatsApp -> Linked Devices -> Link a Device</p><img src="${qrCodeData}" alt="WhatsApp QR Code" style="margin-top:20px; border:4px solid #10b981; border-radius:12px;"/></div>`);
   }
-  res.send(`
-    <div style="text-align:center;margin-top:100px;font-family:sans-serif;">
-      <h2>Generating WhatsApp QR Code...</h2>
-      <p>Please refresh this page in 5 seconds.</p>
-    </div>
-  `);
+  res.send('<div style="text-align:center;margin-top:100px;font-family:sans-serif;"><h2>Generating WhatsApp QR Code...</h2><p>Please refresh this page in 5 seconds.</p></div>');
 });
 
-// 2. Status Route for Testing Connection
 app.get('/status', (req, res) => {
-  res.json({
-    success: true,
-    connected: isConnected,
-    message: isConnected ? 'Gateway is online and WhatsApp is connected.' : 'Gateway is online, waiting for WhatsApp QR scan.'
-  });
+  res.json({ success: true, connected: isConnected, message: isConnected ? 'Gateway is online and WhatsApp is connected.' : 'Gateway is online, waiting for WhatsApp QR scan.' });
 });
 
-// 3. Send Message API Endpoint
 app.post('/send-message', async (req, res) => {
   const authHeader = req.headers['authorization'] || req.headers['x-api-key'];
   const token = authHeader && authHeader.replace('Bearer ', '') || req.body.secret;
